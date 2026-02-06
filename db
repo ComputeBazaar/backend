@@ -1,0 +1,8 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,               -- internal unique identifier
+    name TEXT NOT NULL,                     -- user's full name
+    email TEXT NOT NULL UNIQUE,             -- unique login email
+    api_key UUID UNIQUE DEFAULT gen_random_uuid(),  -- API key for access
+    password_hash TEXT NOT NULL,            -- hashed password
+    refresh_token TEXT                      -- store refresh token (optional)
+);
