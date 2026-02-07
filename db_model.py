@@ -6,9 +6,9 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(BigInteger, primary_key=True, index=True)
+    id = Column(BigInteger, primary_key=True)
     name = Column(Text, nullable=False)
-    email = Column(Text, nullable=False, unique=True, index=True)
-    api_key = Column(UUID(as_uuid=True), unique=True, default=uuid.uuid4)
+    email = Column(Text, unique=True, nullable=False)
+    api_key = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True)
     password_hash = Column(Text, nullable=False)
     refresh_token = Column(Text, nullable=True)
