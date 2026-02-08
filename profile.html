@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ComputeBazaar | Account Settings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            body {
+                font-family: 'Space Grotesk', sans-serif;
+            }
+            ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #101622;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #3b4354;
+                border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #135bec;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
+    <aside
+        class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111318] flex flex-col h-screen sticky top-0">
+        <div class="p-6 flex items-center gap-3">
+            <div
+                class="bg-primary size-10 rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined">terminal</span>
+            </div>
+            <div>
+                <h1 class="text-base font-bold leading-none tracking-tight">ComputeBazaar</h1>
+                <p class="text-xs text-slate-500 dark:text-[#9da6b9]">Admin Console</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 space-y-1">
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-[#9da6b9] hover:bg-slate-100 dark:hover:bg-[#282e39] rounded-lg transition-colors group"
+                href="#">
+                <span
+                    class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">dashboard</span>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-[#9da6b9] hover:bg-slate-100 dark:hover:bg-[#282e39] rounded-lg transition-colors group"
+                href="#">
+                <span
+                    class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">receipt_long</span>
+                <span class="text-sm font-medium">Usage Logs</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-[#9da6b9] hover:bg-slate-100 dark:hover:bg-[#282e39] rounded-lg transition-colors group"
+                href="#">
+                <span
+                    class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">code</span>
+                <span class="text-sm font-medium">Script Management</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-[#9da6b9] hover:bg-slate-100 dark:hover:bg-[#282e39] rounded-lg transition-colors group"
+                href="#">
+                <span
+                    class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">database</span>
+                <span class="text-sm font-medium">Active Servers</span>
+            </a>
+            <div class="pt-4 pb-2 px-3">
+                <p class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Preferences</p>
+            </div>
+            <a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary dark:bg-[#282e39] dark:text-white rounded-lg transition-colors"
+                href="#">
+                <span class="material-symbols-outlined">manage_accounts</span>
+                <span class="text-sm font-medium">Account Settings</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors group mt-4"
+                href="#">
+                <span class="material-symbols-outlined text-rose-500">logout</span>
+                <span class="text-sm font-medium">Logout</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <button
+                class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold py-2.5 px-4 rounded-lg transition-all shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-sm font-bold">add</span>
+                <span>New Instance</span>
+            </button>
+        </div>
+    </aside>
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="p-8 pb-4 flex flex-wrap justify-between items-end gap-4">
+            <div class="space-y-1">
+                <h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Account Settings</h2>
+                <p class="text-slate-500 dark:text-[#9da6b9] text-sm">Manage your profile information and security
+                    credentials.</p>
+            </div>
+        </header>
+        <div class="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            <div
+                class="bg-white dark:bg-[#111318] border border-slate-200 dark:border-[#3b4354] rounded-xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                    <h3 class="font-bold text-slate-900 dark:text-white">Profile Information</h3>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Full Name</label>
+                        <input id="user-name"
+                            class="w-full bg-slate-50 dark:bg-[#1c222d] border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary"
+                            type="text" value="Alex Rivera" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+                        <input id="user-email"
+                            class="w-full bg-slate-50 dark:bg-[#1c222d] border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-primary focus:border-primary"
+                            type="email" value="alex.rivera@example.com" />
+                    </div>
+                    <div class="flex items-end col-span-1 md:col-span-2">
+                        <button
+                            class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-primary/20">Update
+                            Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div
+                class="bg-white dark:bg-[#111318] border border-slate-200 dark:border-[#3b4354] rounded-xl shadow-sm overflow-hidden">
+                <div
+                    class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">vpn_key</span>
+                        <h3 class="font-bold text-slate-900 dark:text-white">Host Key Management</h3>
+                    </div>
+                    <span
+                        class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 uppercase">Active</span>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-slate-500 dark:text-[#9da6b9] mb-4">Use this key to authenticate your
+                        automated deployments and SSH connections to ComputeBazaar instances.</p>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Your AUTH TOKEN</label>
+                        <div class="flex gap-2">
+                            <div
+                                class="flex-1 bg-slate-50 dark:bg-[#1c222d] border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 font-mono text-sm flex items-center justify-between text-slate-600 dark:text-slate-300">
+                                <span class="truncate pr-4"
+                                    id="user-api">••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••</span>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    <button
+                                        class="text-slate-400 hover:text-primary transition-colors p-1 flex items-center"
+                                        title="Show/Hide Key" id="visibilty">
+                                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                    </button>
+                                    <button
+                                        class="text-slate-400 hover:text-primary transition-colors p-1 flex items-center"
+                                        title="Copy Key" id="copyKey">
+                                        <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <button
+                                class="px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#111318] rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-[#282e39] transition-colors flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                                <span>Regeneate Key</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg flex gap-3">
+                        <span class="material-symbols-outlined text-blue-500">info</span>
+                        <p class="text-xs text-blue-700 dark:text-blue-500/80 leading-relaxed">
+                            Security Tip: Only reveal your AUTH TOKEN when you are in a secure environment. Your key is
+                            stored encrypted and should never be shared with unauthorized parties. Rotating your key
+                            will invalidate the current one immediately.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="./main.js"></script>
+    <!-- <script src="./main.js"></script> -->
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = await getCurrentUser();
+            if (!user) {
+                window.location.href = "auth.html";
+                return;
+            }
+
+            document.getElementById("user-email").value = user.email;
+            document.getElementById("user-name").value = user.name;
+            document.getElementById("user-api").textContent = user.api_key;
+
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            // Clear auth/session (adjust based on your auth system)
+            localStorage.removeItem("currentUser"); // or sessionStorage.removeItem
+            // Redirect to login
+            window.location.href = "auth.html";
+        });
+    </script>
+</body>
+
+</html>
