@@ -16,6 +16,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 class UserProfile(BaseModel):
+    id: int
     name: str
     email: EmailStr
     api_key: str
@@ -46,12 +47,12 @@ class MessageType(Enum):
 class Resources(BaseModel):
     cpu_cores: int
     memory_gb: int
-    gpu_memory_mb: int
     disk_gb: int
     nvidia_gpu: bool = False
 
 class Credentials(BaseModel):
-    id: str
+    host: str
+    port: int
     passwd: str
 
 class MonitorAck(BaseModel):

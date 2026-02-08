@@ -16,7 +16,7 @@ import uvicorn
 import asyncio
 from models import *
 from pydantic import ValidationError
-from redis_utils import redis_remove_edge, redis_add_edge, authenticate_edge, get_edge_id, redis_get_all_edges
+from redis_utils import redis_remove_edge, redis_add_edge, authenticate_edge, get_edge_id, redis_get_all_edges, redis_add_conn, redis_remove_conn, redis_get_conn, redis_isconnected
 
 
 Base.metadata.create_all(bind=engine)
@@ -46,6 +46,7 @@ def get_current_user(
     user = db.query(User).filter(User.email == payload["sub"]).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # print("Current user:", user.id)
     return user
 
 
@@ -110,6 +111,7 @@ def refresh(payload: dict, db: Session = Depends(get_db)):
 @app.get("/me", response_model=UserProfile)
 def me(current_user: User = Depends(get_current_user)):
     return {
+        "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
         "api_key": str(current_user.api_key)
@@ -147,12 +149,12 @@ def host(current_user: User = Depends(get_current_user)):
 # Edge Server Backend
 EDGE_CONNECTIONS: dict[str, WebSocket] = {}
 
-@app.post("/api/edge/assign/{edge_id}")
-async def assign(edge_id: str, resources: Resources, resp: Response):
+# @app.post("/api/edge/assign/{edge_id}")
+async def assign(edge_id: str, resources: Resources, resp: Response, db: Session = Depends(get_db)):
     ws = EDGE_CONNECTIONS.get(edge_id)
     if (ws is None):
         resp.status_code = 502
-        return {"info": "bad gateway"}
+        return {"info": "bad gateway now connected"}
     
     payload = {
         "type": MessageType.ASSIGN_REQ.value,
@@ -166,66 +168,32 @@ async def assign(edge_id: str, resources: Resources, resp: Response):
         try:
             response = AssignResp.model_validate(response)
 
-            if not authenticate_edge(response.auth_token):
+            if not authenticate_edge(response.auth_token, db):
                 resp.status_code = 502
-                return {"info": "bad gateway"}
+                return {"info": "bad gateway authentication"}
 
             if response.type == MessageType.ASSIGN_ACK.value:
                 resp.status_code = 200
                 return response.containerInfo.model_dump()
                 
             else:
+                print(response)
                 resp.status_code = 503
                 return {"info": "service unvailable from the client"}
 
         except ValidationError as e:
             resp.status_code = 502
-            return {"info": "bad gateway"}
-
-    except WebSocketDisconnect:
-        pass
-
-    resp.status_code = 502
-    return {"info": "bad gateway"}
-
-@app.post("/api/edge/execute/{edge_id}")
-async def assign(cmdreq: CmdReq, edge_id: str, resp: Response):
-    ws = EDGE_CONNECTIONS.get(edge_id)
-    if (ws is None):
-        resp.status_code = 502
-        return {"info": "bad gateway"}
-    
-    payload = {
-        "type": MessageType.CMD_REQ.value,
-        "cmdreq": cmdreq.model_dump()
-    }
-    try:
-        await ws.send_text(json.dumps(payload))
-        raw = await ws.receive_text()
-        response = json.loads(raw)
-
-        try:
-            response = ExecResp.model_validate(response)
-
-            if response.type == MessageType.CMD_ACK.value:
-                resp.status_code = 200
-                return {"stdout": response.stdout}
-                
-            else:
-                resp.status_code = 503
-                return {"info": "service unvailable from the client"}
-
-        except ValidationError as e:
-            resp.status_code = 502
+            print(e)
+            print(response)
             return {"info": "bad gateway validation"}
 
     except WebSocketDisconnect:
         pass
 
     resp.status_code = 502
-    return {"info": "bad gateway"}
+    return {"info": "bad gateway unprocessable"}
 
-@app.post("/api/edge/cleanup/{edge_id}")
+# @app.post("/api/edge/cleanup/{edge_id}")
 async def cleanup(edge_id: str, clnReq: ClnReq, resp: Response):
 
     ws = EDGE_CONNECTIONS.get(edge_id)
@@ -261,8 +229,45 @@ async def cleanup(edge_id: str, clnReq: ClnReq, resp: Response):
     resp.status_code = 502
     return {"info": "bad gateway"}
 
+@app.post("/api/edge/getcreds/{edge_id}")
+async def get_creds(edge_id: str, user_id: str, resources: Resources, resp: Response, db: Session = Depends(get_db)):
+
+    containerInfo = redis_get_conn(edge_id, user_id)
+    if containerInfo:
+        return json.loads(containerInfo)
+    else:
+        response = await assign(edge_id, resources, resp, db)
+        redis_add_conn(edge_id, user_id, ContainerInfo.model_validate(response))
+        return response
+
+@app.post("/api/edge/leavecreds/{edge_id}")
+async def leave_creds(edge_id: str, user_id: str, resp: Response, db: Session = Depends(get_db)):
+
+    if edge_id not in EDGE_CONNECTIONS:
+        resp.status_code = 502
+        return {"info": "bad gateway not connected"}
+    
+    containerInfo_str = redis_get_conn(edge_id, user_id)
+    if containerInfo_str is None:
+        return {"info": "connection removed"}
+    
+    containerInfo_dict = json.loads(containerInfo_str)
+    containerInfo = ContainerInfo.model_validate(containerInfo_dict)
+    redis_remove_conn(edge_id, user_id, containerInfo)
+
+    await cleanup(edge_id, ClnReq(
+        container_id=containerInfo.container_id, 
+        resources=containerInfo.resources
+    ), resp)
+
+    return {"info": "connection removed"}
+
+@app.get("/api/edge/isconnected/{user_id}")
+async def is_connected(user_id: str, resp: Response):
+    return {"connected": redis_isconnected(user_id)}
+
 @app.websocket("/api/edge/ws")
-async def ws_endpoint(ws: WebSocket):
+async def ws_endpoint(ws: WebSocket, db: Session = Depends(get_db)):
     await ws.accept()
 
     try:
@@ -291,9 +296,10 @@ async def ws_endpoint(ws: WebSocket):
 
             auth_token = response.auth_token
             
-            if authenticate_edge(auth_token):
+            if authenticate_edge(auth_token, db):
                 if edge_id is None:
-                    edge_id = get_edge_id(auth_token)
+                    edge_id = get_edge_id(auth_token, db)
+                    edge_id = str(edge_id)
             else:
                 payload = {
                     "type": MessageType.INCR_AUTH.value
@@ -303,7 +309,7 @@ async def ws_endpoint(ws: WebSocket):
 
             EDGE_CONNECTIONS[edge_id] = ws
             redis_add_edge(edge_id, response.resources)
-            await asyncio.sleep(5)
+            await asyncio.sleep(30)
     except WebSocketDisconnect:
         pass
     finally:
@@ -315,26 +321,58 @@ async def ws_endpoint(ws: WebSocket):
 @app.get("/api/servers")
 def get_servers():
     edges = redis_get_all_edges()
-    servers = []
-    
-    for edge in edges:
-        servers.append({
-            "name": edge.get("edge_id", "Unknown-Server"),
-            "verified": True,  # optionally customize
-            "rating": 4.5,     # placeholder
-            "location": "Unknown",  # can store actual location in Redis
-            "region": "eu",         # placeholder
-            "price": 0.2,           # placeholder
-            "cpu": {"cores": edge.get("cpu_cores", 4), "model": "Unknown"},
-            "ram": {"size": edge.get("memory_gb", 16), "type": "DDR4", "detail": ""},
-            "gpu": {
-                "model": "NVIDIA GPU" if edge.get("nvidia_gpu") else "None",
-                "vram": f"{edge.get('gpu_memory_mb', 0)}MB"
-            },
-            "network": "1 Gbps",  # placeholder
-            "uptime": "99.9%"     # placeholder
-        })
 
+    servers = []
+
+    cpu_cores: int
+    memory_gb: int
+    disk_gb: int
+    nvidia_gpu: bool = False
+    
+    for key, val in edges.items():
+        servers.append({
+            "name": f"Server {key}",
+            "edge_id": key,
+            "price": 0.2,           # placeholder
+            "cpu": val.get("cpu_cores", 1),
+            "ram": f"{val.get('memory_gb', 1)} GB",
+            "gpu": {
+                "model": "NVIDIA GPU" if val.get("nvidia_gpu") else "No GPU"
+            },
+            "disk": f"{val.get('disk_gb', 5)} GB"     # placeholder
+        })
+    servers.append({
+        "name": f"Server 1",
+        "edge_id": "1",
+        "price": 0.2,           # placeholder
+        "cpu": 4,
+        "ram": f"8 GB",
+        "gpu": {
+            "model": "NVIDIA GPU"
+        },
+        "disk": f"5 GB"     # placeholder
+    })
+    print(servers)
+    # servers.append({
+    #     "name": f"Server {key}",
+    #     "price": 0.2,           # placeholder
+    #     "cpu": val.get("cpu_cores", 1),
+    #     "ram": f"{val.get('memory_gb', 1)}GB",
+    #     "gpu": {
+    #         "model": "NVIDIA GPU" if val.get("nvidia_gpu") else "No GPU"
+    #     },
+    #     "disk": f"{val.get('disk_gb', 5)}GB"     # placeholder
+    # })
+    # servers.append({
+    #     "name": f"Server {key}",
+    #     "price": 0.2,           # placeholder
+    #     "cpu": val.get("cpu_cores", 1),
+    #     "ram": f"{val.get('memory_gb', 1)}GB",
+    #     "gpu": {
+    #         "model": "NVIDIA GPU" if val.get("nvidia_gpu") else "No GPU"
+    #     },
+    #     "disk": f"{val.get('disk_gb', 5)}GB"     # placeholder
+    # })
     return servers
 
 # if __name__ == "__main__":
